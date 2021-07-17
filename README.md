@@ -48,6 +48,8 @@
   - Repository Package - Services
     - `get`: Query by ID
     - `put`: Upsert by ID
+    - `start`: Sets up the database and registers services as up with Supervisor
+    - `stop`: Waits until all work is done, then registers as down with Supervisor.
 
 ## Optimistic Plan
 
