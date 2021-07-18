@@ -18,7 +18,7 @@ var (
 // Stand-in for a table schema.
 type Record struct {
   Hash string
-  Hashtime int
+  Hashtime int64
 }
 
 // Used for indicating up/down status to Supervisor.
@@ -69,7 +69,7 @@ func Stop(unregister func()) {
 }
 
 // Returns a value from the repository by ID.
-func Get(id) Record {
+func Get(id) (Record, error) {
   ch := make(chan Record)
   go select(id, ch)
   record, ok := <-ch
@@ -80,7 +80,7 @@ func Get(id) Record {
 }
 
 // Upserts a value into the repository by ID.
-func Put(id, hash, hashtime) int {
+func Put(id int, hash string, hashtime int64) (int, error) {
   if active {
     // TODO: Fire and forget upserts should be refactored away if/when an actual DB implementation is brought in..
     go upsert(id, Record{hash, hashtime})
