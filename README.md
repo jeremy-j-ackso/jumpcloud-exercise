@@ -36,7 +36,8 @@
     - `stop`: Waits until all work is done, then registers as down with Supervisor.
   - Supervisor Package - Service
     - `start`: launches all services
-    - `register`: services register their up/down status with the Supervisor.
+    - `register`: services register their up status with the Supervisor.
+    - `unregister`: services register their down status with the Supervisor.
     - `stop`: requests all services to finish up current work and update their up/down status.
   - HTTP package - Service
     - `register`: Takes one arguments: `path`, `handler`
