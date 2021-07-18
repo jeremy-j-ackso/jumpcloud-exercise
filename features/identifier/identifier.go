@@ -13,7 +13,6 @@ var (
   packageName := "identifier"
 )
 
-
 // Used for indicating up/down status to Supervisor.
 func activate() {
   activeMutex.Lock()
