@@ -5,9 +5,10 @@ package hashrepository
 import (
   "errors"
   "sync"
+  "time"
 )
 
-const packageName := "hashrepository"
+const PackageName := "hashrepository"
 
 var (
   database := make(map[int]Record)
@@ -18,7 +19,7 @@ var (
 // Stand-in for a table schema.
 type Record struct {
   Hash string
-  Hashtime int64
+  Hashtime time.Time
 }
 
 // Used for indicating up/down status to Supervisor.
@@ -54,8 +55,7 @@ func upsert(id, data) {
 }
 
 // Sets up the repository and database access.
-func Start(register func()) {
-  register(packageName)
+func Start() {
 }
 
 // Tears down the repository and database access.
@@ -65,7 +65,7 @@ func Stop(unregister func()) {
       break
     }
   }
-  unregister(packageName)
+  unregister(PackageName)
 }
 
 // Returns a value from the repository by ID.
@@ -80,7 +80,7 @@ func Get(id) (Record, error) {
 }
 
 // Upserts a value into the repository by ID.
-func Put(id int, hash string, hashtime int64) (int, error) {
+func Put(id int, hash string, hashtime time.Time) (int, error) {
   if active {
     // TODO: Fire and forget upserts should be refactored away if/when an actual DB implementation is brought in..
     go upsert(id, Record{hash, hashtime})

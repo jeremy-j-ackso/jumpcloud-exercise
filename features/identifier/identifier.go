@@ -5,12 +5,13 @@ import (
   "sync"
 )
 
+const PackageName := "identifier"
+
 var (
   active int = 0
   activeMutex sync.Mutex
   id int = 0
   mux sync.Mutex
-  packageName := "identifier"
 )
 
 // Used for indicating up/down status to Supervisor.
@@ -28,7 +29,7 @@ func deactivate() {
 }
 
 // Returns the next identifier number.
-func Get() {
+func Get() int {
   activate()
   mux.Lock()
   id++
@@ -39,7 +40,7 @@ func Get() {
 }
 
 // Returns the current identifier number.
-func Current() {
+func Current() int {
   activate()
   mux.Lock()
   output := id
@@ -49,8 +50,7 @@ func Current() {
 }
 
 // Registers as up with the Supervisor package.
-func Start(register func()) {
-  register(packageName)
+func Start() {
 }
 
 // Register as down with the Supervisor package when all work complete.
@@ -60,5 +60,5 @@ func Stop(unregister func()) {
       break
     }
   }
-  unregister(packageName)
+  unregister(PackageName)
 }

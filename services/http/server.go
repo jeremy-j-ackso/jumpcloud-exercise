@@ -10,7 +10,7 @@ import (
   "sync"
 )
 
-const packageName := "httpserver"
+const PackageName := "httpserver"
 
 var (
   active int = 0
@@ -35,7 +35,7 @@ func deactivate() {
 
 // Registers a URL path to a handler.
 func Register(path string, handler func()) {
-  mux.HandleFunc(path, func(w http.ResponseWriter, r http.Request) {
+  mux.HandleFunc(path, func(w http.ResponseWriter, r *http.Request) {
     activate()
     ch := make(chan int)
     handler(w, r, ch)
@@ -45,13 +45,12 @@ func Register(path string, handler func()) {
 }
 
 // Sets up the repository and database access.
-func Start(address string, port string, register func()) {
+func Start(address string, port string) {
   srv = http.Server{
     Addr: address + ":" + port,
     Handler: mux
   }
   srv.ListenAndServe()
-  register(packageName)
 }
 
 // Tears down the repository and database access.
@@ -62,6 +61,6 @@ func Stop(unregister func()) {
       break
     }
   }
-  unregister(packageName)
+  unregister(PackageName)
 }
 

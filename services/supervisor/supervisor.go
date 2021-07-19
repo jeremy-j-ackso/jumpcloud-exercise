@@ -10,7 +10,18 @@ type Package struct {
   Stop func()
 }
 
-func Start(pkg) {
+func Register(pkg string, start func(), stop func()) {
+  register[pkg] := Package{
+    Start: start,
+    Stop: stop
+  }
+}
+
+func Unregister(pkg string) {
+  delete(register, pkg)
+}
+
+func Start(pkg string) {
   register[pkg].Start()
 }
 
@@ -20,23 +31,12 @@ func StartAll() {
   }
 }
 
-func Stop(pkg) {
-  register[pkg].Stop()
+func Stop(pkg string) {
+  register[pkg].Stop(Unregister)
 }
 
 func StopAll() {
   for pkg := range register {
     go Stop(pkg)
   }
-}
-
-func Register(pkg, stop) {
-  register[pkg] := Package{
-    Start: start,
-    Stop: stop
-  }
-}
-
-func Unregister(pkg) {
-  delete(register, pkg)
 }

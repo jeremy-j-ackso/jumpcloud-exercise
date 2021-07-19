@@ -4,12 +4,14 @@ package registrar
 import (
   "jumpcloud-exercises/services/hashrepository"
   "sync"
+  "time"
 )
+
+const PackageName := "registrar"
 
 var (
   active int = 0
   activeMutex sync.Mutex
-  packageName := "registrar"
 )
 
 // Used for indicating up/down status to Supervisor.
@@ -26,22 +28,20 @@ func deactivate() {
   activeMutex.Unlock()
 }
 
-func Get(id) (struct, error) {
+func Get(id) (hashrepository.Record, error) {
   activate()
   output, error := hashrepository.Get(id)
   deactivate()
   return output, error
 }
 
-func Put(id int, hash string, hashtime int64) (int, error) {
+func Put(id int, hash string, hashtime time.Time) {
   activate()
-  ok, error := hashrepository.Put(id, hash, hashtime)
+  ok, error := hashrepository.Put(id, hash, hashtime) // TODO: Should implement retry logic.
   deactivate()
-  return ok, error
 }
 
-func Start(register func()) {
-  register(packageName)
+func Start() {
 }
 
 func Stop(unregister func()) {
@@ -50,5 +50,5 @@ func Stop(unregister func()) {
       break
     }
   }
-  unregister(packageName)
+  unregister(PackageName)
 }

@@ -7,6 +7,8 @@ import (
   "time"
 )
 
+const PackageName := "hash"
+
 var (
   active int = 0
   activeMutex sync.Mutex
@@ -14,7 +16,6 @@ var (
   hashtime int64 = 0
   hashMux sync.Mutex
   hashtimeMux sync.Mutex
-  packageName := "hash"
 )
 
 // Used for indicating up/down status to Supervisor.
@@ -37,8 +38,8 @@ func calculateHash(toHash string) string {
   return asBase64
 }
 
-func calculateNewHashAvg(newDuration int64, currentHashes int) {
-  return (hashtime + newDuration) / currentHashes
+func calculateNewHashAvg(newDuration time.Duration, currentHashes int) {
+  return (hashtime + newDuration.Microseconds()) / currentHashes
 }
 
 func Hash(password string) string {
@@ -72,8 +73,7 @@ func GetAvg() int64 {
   return output
 }
 
-func Start(register func()) {
-  register(packageName)
+func Start() {
 }
 
 func Stop(unregister func()) {
@@ -82,5 +82,5 @@ func Stop(unregister func()) {
       break
     }
   }
-  unregister(packageName)
+  unregister(PackageName)
 }

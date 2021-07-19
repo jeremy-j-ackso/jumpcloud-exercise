@@ -7,10 +7,11 @@ import (
   "sync"
 )
 
+const PackageName := "stats"
+
 var (
   active int = 0
   activeMutex sync.Mutex
-  packageName := "stats"
 )
 
 // Used for indicating up/down status to Supervisor.
@@ -35,8 +36,7 @@ func Get() (total int, average int64) {
   return
 }
 
-func Start(register func()) {
-  register(packageName)
+func Start() {
 }
 
 func Stop(unregister func()) {
@@ -45,5 +45,5 @@ func Stop(unregister func()) {
       break
     }
   }
-  unregister(packageName)
+  unregister(PackageName)
 }
