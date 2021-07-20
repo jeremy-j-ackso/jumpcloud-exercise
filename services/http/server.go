@@ -6,18 +6,23 @@ package httpserver
 // able to eliminate or smooth out the Supervisor package by doing so.
 
 import (
+  "context"
   "net/http"
   "sync"
 )
 
-const PackageName := "httpserver"
+const PackageName string = "httpserver"
 
 var (
   active int = 0
   activeMutex sync.Mutex
   srv http.Server
-  mux http.ServeMux
+  mux *http.ServeMux = http.NewServeMux()
 )
+
+// init {
+//   mux = http.NewServeMux()
+// }
 
 // Used for indicating up/down status to Supervisor.
 func activate() {
@@ -34,12 +39,12 @@ func deactivate() {
 }
 
 // Registers a URL path to a handler.
-func Register(path string, handler func()) {
+func Register(path string, handler func(w http.ResponseWriter, r *http.Request, ch chan int)) {
   mux.HandleFunc(path, func(w http.ResponseWriter, r *http.Request) {
     activate()
-    ch := make(chan int)
-    handler(w, r, ch)
-    <-ch
+    cha := make(chan int)
+    handler(w, r, cha)
+    <-cha
     deactivate()
   })
 }
@@ -48,16 +53,16 @@ func Register(path string, handler func()) {
 func Start(address string, port string) {
   srv = http.Server{
     Addr: address + ":" + port,
-    Handler: mux
+    Handler: mux,
   }
   srv.ListenAndServe()
 }
 
 // Tears down the repository and database access.
-func Stop(unregister func()) {
-  srv.Shutdown()
+func Stop(unregister func(pkg string)) {
+  srv.Shutdown(context.Background())
   for {
-    if !active {
+    if active > 0 {
       break
     }
   }
