@@ -8,10 +8,10 @@ import (
   "time"
 )
 
-const PackageName := "hashrepository"
+const PackageName string = "hashrepository"
 
 var (
-  database := make(map[int]Record)
+  database = make(map[int]Record)
   active int = 0
   activeMutex sync.Mutex
 )
