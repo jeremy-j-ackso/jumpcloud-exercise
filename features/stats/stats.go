@@ -2,8 +2,8 @@
 package stats
 
 import (
-  "jumpcloud-exercise/feature/hash"
-  "jumpcloud-exercise/feature/identifier"
+  "jumpcloudexercise/feature/hash"
+  "jumpcloudexercise/feature/identifier"
   "sync"
 )
 

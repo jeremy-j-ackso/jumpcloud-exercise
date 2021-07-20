@@ -1,8 +1,8 @@
 // Jumpcloud-Exercise implements an HTTP API for assigned routes and features.
-package jumpcloud-exercises
+package jumpcloudexercises
 
 import (
-  "jumpcloud-exercises/app/app"
+  "jumpcloudexercises/app/app"
 )
 
 func main() {

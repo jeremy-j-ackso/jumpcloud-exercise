@@ -1,3 +1,3 @@
-module jumpcloud-exercise
+module jumpcloudexercise
 
 go 1.16

@@ -2,7 +2,7 @@
 package registrar
 
 import (
-  "jumpcloud-exercises/services/hashrepository"
+  "jumpcloudexercises/services/hashrepository"
   "sync"
   "time"
 )
