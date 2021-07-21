@@ -2,19 +2,16 @@
 package supervisor
 
 var (
-  register := make(map[string]Package)
+  register = make(map[string]Package)
 )
 
 type Package struct {
-  Start func(),
-  Stop func()
+  Start func()
+  Stop func(func(string))
 }
 
-func Register(pkg string, start func(), stop func()) {
-  register[pkg] := Package{
-    Start: start,
-    Stop: stop
-  }
+func Register(pkg string, start func(), stop func(func(string))) {
+  register[pkg] = Package{start, stop}
 }
 
 func Unregister(pkg string) {

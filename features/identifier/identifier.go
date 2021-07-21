@@ -5,7 +5,7 @@ import (
   "sync"
 )
 
-const PackageName := "identifier"
+const PackageName string = "identifier"
 
 var (
   active int = 0
@@ -54,9 +54,9 @@ func Start() {
 }
 
 // Register as down with the Supervisor package when all work complete.
-func Stop(unregister func()) {
+func Stop(unregister func(string)) {
   for {
-    if !active {
+    if active == 0 {
       break
     }
   }

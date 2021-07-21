@@ -7,7 +7,7 @@ import (
   "time"
 )
 
-const PackageName := "registrar"
+const PackageName string = "registrar"
 
 var (
   active int = 0
@@ -44,9 +44,9 @@ func Put(id int, hash string, hashtime time.Time) {
 func Start() {
 }
 
-func Stop(unregister func()) {
+func Stop(unregister func(string)) {
   for {
-    if !active {
+    if active == 0 {
       break
     }
   }

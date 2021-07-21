@@ -37,7 +37,7 @@ func deactivate() {
 }
 
 // Stand-in for a select function offered by a DB library.
-func select(id, ch chan<- Record) {
+func query(id int, ch chan<- Record) {
   output, present := database[id]
   if present {
     ch <- output
@@ -48,7 +48,7 @@ func select(id, ch chan<- Record) {
 }
 
 // Stand-in for an upsert function offered by a DB library.
-func upsert(id, data) {
+func upsert(id int, data Record) {
   activate()
   database[id] = data
   deactivate()
@@ -59,9 +59,9 @@ func Start() {
 }
 
 // Tears down the repository and database access.
-func Stop(unregister func()) {
+func Stop(unregister func(string)) {
   for {
-    if !active {
+    if active == 0 {
       break
     }
   }
@@ -69,23 +69,24 @@ func Stop(unregister func()) {
 }
 
 // Returns a value from the repository by ID.
-func Get(id) (Record, error) {
+func Get(id int) (Record, error) {
   ch := make(chan Record)
-  go select(id, ch)
+  go query(id, ch)
   record, ok := <-ch
   if ok {
     return record, nil
   } else {
-    return nil, errors.New("ID %d does not exist")
+    return Record{"", time.Unix(0, 0)}, errors.New("ID %d does not exist")
+  }
 }
 
 // Upserts a value into the repository by ID.
 func Put(id int, hash string, hashtime time.Time) (int, error) {
-  if active {
+  if active > 0 {
     // TODO: Fire and forget upserts should be refactored away if/when an actual DB implementation is brought in..
     go upsert(id, Record{hash, hashtime})
     return 1, nil
   } else {
-    return nil, errors.New("Shutting down")
+    return 0, errors.New("Shutting down")
   }
 }

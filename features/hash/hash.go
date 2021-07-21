@@ -4,15 +4,16 @@ package hash
 import (
   "crypto/sha512"
   "encoding/base64"
+  "sync"
   "time"
 )
 
-const PackageName := "hash"
+const PackageName string = "hash"
 
 var (
   active int = 0
   activeMutex sync.Mutex
-  hashes int = 0
+  hashes int64 = 0
   hashtime int64 = 0
   hashMux sync.Mutex
   hashtimeMux sync.Mutex
@@ -33,12 +34,13 @@ func deactivate() {
 }
 
 func calculateHash(toHash string) string {
-  hashed := sha512.Sum512([]byte(toHash))
-  asBase64 := base64.StdEncoding.EncodeToSting(hashed)
+  hasher := sha512.New()
+  hashed := hasher.Sum([]byte(toHash))
+  asBase64 := base64.StdEncoding.EncodeToString(hashed)
   return asBase64
 }
 
-func calculateNewHashAvg(newDuration time.Duration, currentHashes int) {
+func calculateNewHashAvg(newDuration time.Duration, currentHashes int64) int64 {
   return (hashtime + newDuration.Microseconds()) / currentHashes
 }
 
@@ -76,9 +78,9 @@ func GetAvg() int64 {
 func Start() {
 }
 
-func Stop(unregister func()) {
+func Stop(unregister func(string)) {
   for {
-    if !active {
+    if active == 0 {
       break
     }
   }

@@ -62,7 +62,7 @@ func Start(address string, port string) {
 func Stop(unregister func(pkg string)) {
   srv.Shutdown(context.Background())
   for {
-    if active > 0 {
+    if active == 0 {
       break
     }
   }

@@ -7,7 +7,7 @@ import (
   "sync"
 )
 
-const PackageName := "stats"
+const PackageName string = "stats"
 
 var (
   active int = 0
@@ -39,9 +39,9 @@ func Get() (total int, average int64) {
 func Start() {
 }
 
-func Stop(unregister func()) {
+func Stop(unregister func(string)) {
   for {
-    if !active {
+    if active == 0 {
       break
     }
   }
