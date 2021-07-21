@@ -2,8 +2,8 @@
 package stats
 
 import (
-  "jumpcloudexercise/feature/hash"
-  "jumpcloudexercise/feature/identifier"
+  "jumpcloudexercise/features/hash"
+  "jumpcloudexercise/features/identifier"
   "sync"
 )
 
@@ -30,8 +30,8 @@ func deactivate() {
 
 func Get() (total int, average int64) {
   activate()
-  total := identifier.Current()
-  average := hash.GetAvg()
+  total = identifier.Current()
+  average = hash.GetAvg()
   deactivate()
   return
 }

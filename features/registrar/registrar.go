@@ -2,7 +2,7 @@
 package registrar
 
 import (
-  "jumpcloudexercises/services/hashrepository"
+  "jumpcloudexercise/services/repository"
   "sync"
   "time"
 )
@@ -28,16 +28,16 @@ func deactivate() {
   activeMutex.Unlock()
 }
 
-func Get(id) (hashrepository.Record, error) {
+func Get(id int) (repository.Record, error) {
   activate()
-  output, error := hashrepository.Get(id)
+  output, error := repository.Get(id)
   deactivate()
   return output, error
 }
 
 func Put(id int, hash string, hashtime time.Time) {
   activate()
-  ok, error := hashrepository.Put(id, hash, hashtime) // TODO: Should implement retry logic.
+  repository.Put(id, hash, hashtime) // TODO: Should implement retry logic.
   deactivate()
 }
 

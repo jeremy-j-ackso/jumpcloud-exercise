@@ -1,6 +1,6 @@
 // Repository Package is where we would typically hook in a database or something.
 // In this case we're just using a Map as a stand-in.
-package hashrepository
+package repository
 
 import (
   "errors"

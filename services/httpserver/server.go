@@ -59,13 +59,12 @@ func Start(address string, port string) {
 }
 
 // Tears down the repository and database access.
-func Stop(unregister func(pkg string)) {
+func Stop() {
   srv.Shutdown(context.Background())
   for {
     if active == 0 {
       break
     }
   }
-  unregister(PackageName)
 }
 

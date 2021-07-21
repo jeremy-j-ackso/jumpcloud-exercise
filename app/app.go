@@ -3,53 +3,53 @@ package app
 
 import (
   "encoding/json"
-  "http"
-  "jumpcloudexercises/features/hash"
-  "jumpcloudexercises/features/identifier"
-  "jumpcloudexercises/features/registrar"
-  "jumpcloudexercises/features/stats"
-  "jumpcloudexercises/services/httpserver"
-  "jumpcloudexercises/services/repository"
-  "jumpcloudexercises/services/supervisor"
+  "jumpcloudexercise/features/hash"
+  "jumpcloudexercise/features/identifier"
+  "jumpcloudexercise/features/registrar"
+  "jumpcloudexercise/features/stats"
+  "jumpcloudexercise/services/httpserver"
+  "jumpcloudexercise/services/repository"
+  "jumpcloudexercise/services/supervisor"
+  "net/http"
   "strconv"
   "strings"
   "time"
 )
 
 type packageSupervisors struct {
-  PackageName string,
-  Start func(),
-  Stop func()
+  PackageName string
+  Start func()
+  Stop func(func(string))
 }
 
 type endpointHandler struct {
-  Path string,
-  Handler func()
+  Path string
+  Handler func(http.ResponseWriter, *http.Request, chan int)
 }
 
-const (
-  toRegisterWithSupervisor = []packageSupervisors{
+var (
+  toRegisterWithSupervisor = [...]packageSupervisors{
     packageSupervisors{hash.PackageName, hash.Start, hash.Stop},
     packageSupervisors{identifier.PackageName, identifier.Start, identifier.Stop},
     packageSupervisors{registrar.PackageName, registrar.Start, registrar.Stop},
     packageSupervisors{stats.PackageName, stats.Start, stats.Stop},
-    packageSupervisors{repository.PackageName, repository.Start, repository.Stop}
+    packageSupervisors{repository.PackageName, repository.Start, repository.Stop},
   }
 
-  hashPath := endpointHandler{'/hash', hashHandler}
-  hashedPath := endpointHandler{'/hash/*', hashedHandler}
-  shutdownPath := endpointHandler{'/shutdown', shutdownHandler}
-  statsPath := endpointHandler{'/stats', statsHandler}
+  hashPath = endpointHandler{"/hash", hashHandler}
+  hashedPath = endpointHandler{"/hash/*", hashedHandler}
+  shutdownPath = endpointHandler{"/shutdown", shutdownHandler}
+  statsPath = endpointHandler{"/stats", statsHandler}
 
   toRegisterWithHttp = []endpointHandler{
     hashPath,
     hashedPath,
     shutdownPath,
-    statsPath
+    statsPath,
   }
 )
 
-func hashHandler(w http.ResponseWriter, r *http.Request, ch chan) {
+func hashHandler(w http.ResponseWriter, r *http.Request, ch chan int) {
   switch r.Method {
   case "POST":
     password := r.FormValue("password")
@@ -65,10 +65,10 @@ func hashHandler(w http.ResponseWriter, r *http.Request, ch chan) {
   default:
     w.WriteHeader(405) // Method not allowed.
   }
-  ch<-
+  ch<- 1
 }
 
-func hashedHandler(w http.ResponseWriter, r *http.Request, ch chan) {
+func hashedHandler(w http.ResponseWriter, r *http.Request, ch chan int) {
   switch r.Method {
   case "GET":
     path := r.URL.Path
@@ -77,37 +77,37 @@ func hashedHandler(w http.ResponseWriter, r *http.Request, ch chan) {
     id, _ := strconv.Atoi(pathSplit[len(pathSplit)])
     record, err := registrar.Get(id)
 
-    if (err == nil) && (record.hashtime >= time.Now()) {
-      w.Write([]byte(record.hash))
+    if (err == nil) && record.Hashtime.Before(time.Now()) {
+      w.Write([]byte(record.Hash))
     } else {
       w.WriteHeader(404)
     }
   default:
     w.WriteHeader(405) // Method not allowed.
   }
-  ch<-
+  ch<- 1
 }
 
-func shutdownHandler (w http.ResponseWriter, r *http.Request, ch chan) {
+func shutdownHandler (w http.ResponseWriter, r *http.Request, ch chan int) {
   // TODO: Better define which method should be used to issue a shutdown request.
   w.WriteHeader(204)
   Stop()
-  ch<-
+  ch<- 1
 }
 
-func statsHandler (w http.ResponseWriter, r *http.Request, ch chan) {
+func statsHandler (w http.ResponseWriter, r *http.Request, ch chan int) {
   switch r.Method {
   case "GET":
-    response := make[string]int
+    response := make(map[string]int64)
     total, average := stats.Get()
 
-    response["total"] = total
+    response["total"] = int64(total)
     response["average"] = average
 
-    jsonResponse, err := json.Marshall(response)
+    jsonResponse, err := json.Marshal(response)
 
     if err == nil {
-      w.Header.Set("Content-Type", "application/json")
+      w.Header().Set("Content-Type", "application/json")
       w.Write(jsonResponse)
     } else {
       w.WriteHeader(500)
@@ -115,17 +115,21 @@ func statsHandler (w http.ResponseWriter, r *http.Request, ch chan) {
   default:
     w.WriteHeader(405)
   }
-  ch<-
+  ch<- 1
 }
 
 func Start() {
   for pkg := range toRegisterWithSupervisor {
-    supervisor.Register(pkg.PackageName, pkg.Start, pkg.Stop)
+    supervisor.Register(
+      toRegisterWithSupervisor[pkg].PackageName,
+      toRegisterWithSupervisor[pkg].Start,
+      toRegisterWithSupervisor[pkg].Stop,
+    )
   }
   supervisor.StartAll()
 
   for endpoint := range toRegisterWithHttp {
-    httpserver.Register(endpoint.Path, endpoint.Handler)
+    httpserver.Register(toRegisterWithHttp[endpoint].Path, toRegisterWithHttp[endpoint].Handler)
   }
 
   httpserver.Start("localhost", "8080")
