@@ -4,6 +4,7 @@ package repository
 
 import (
   "errors"
+  "log"
   "sync"
   "time"
 )
@@ -56,6 +57,7 @@ func upsert(id int, data Record) {
 
 // Sets up the repository and database access.
 func Start() {
+  log.Printf("%s Package started", PackageName)
 }
 
 // Tears down the repository and database access.
@@ -65,14 +67,21 @@ func Stop(unregister func(string)) {
       break
     }
   }
+  log.Printf("%s Package stopped", PackageName)
   unregister(PackageName)
 }
 
 // Returns a value from the repository by ID.
 func Get(id int) (Record, error) {
   ch := make(chan Record)
+
+  t0 := time.Now()
   go query(id, ch)
   record, ok := <-ch
+  t1 := time.Now()
+
+  log.Printf("Database query took %vms", t1.Sub(t0).Microseconds())
+
   if ok {
     return record, nil
   } else {
@@ -81,12 +90,8 @@ func Get(id int) (Record, error) {
 }
 
 // Upserts a value into the repository by ID.
-func Put(id int, hash string, hashtime time.Time) (int, error) {
-  if active > 0 {
-    // TODO: Fire and forget upserts should be refactored away if/when an actual DB implementation is brought in..
-    go upsert(id, Record{hash, hashtime})
-    return 1, nil
-  } else {
-    return 0, errors.New("Shutting down")
-  }
+func Put(id int, hash string, hashtime time.Time) {
+  // TODO: Fire and forget upserts should be refactored away if/when an actual DB implementation is brought in..
+  go upsert(id, Record{hash, hashtime})
+  return
 }

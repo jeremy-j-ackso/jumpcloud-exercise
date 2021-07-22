@@ -7,8 +7,10 @@ package httpserver
 
 import (
   "context"
+  "log"
   "net/http"
   "sync"
+  "time"
 )
 
 const PackageName string = "httpserver"
@@ -19,10 +21,6 @@ var (
   srv http.Server
   mux *http.ServeMux = http.NewServeMux()
 )
-
-// init {
-//   mux = http.NewServeMux()
-// }
 
 // Used for indicating up/down status to Supervisor.
 func activate() {
@@ -41,11 +39,14 @@ func deactivate() {
 // Registers a URL path to a handler.
 func Register(path string, handler func(w http.ResponseWriter, r *http.Request, ch chan int)) {
   mux.HandleFunc(path, func(w http.ResponseWriter, r *http.Request) {
+    t0 := time.Now()
     activate()
     cha := make(chan int)
-    handler(w, r, cha)
+    go handler(w, r, cha)
     <-cha
     deactivate()
+    t1 := time.Now()
+    log.Printf("%s took $vms", path, t1.Sub(t0).Microseconds())
   })
 }
 
@@ -55,12 +56,14 @@ func Start(address string, port string) {
     Addr: address + ":" + port,
     Handler: mux,
   }
+  log.Println("HTTP Server Started")
   srv.ListenAndServe()
 }
 
 // Tears down the repository and database access.
 func Stop() {
-  srv.Shutdown(context.Background())
+  go srv.Shutdown(context.Background())
+  log.Println("HTTP Server Stopped")
   for {
     if active == 0 {
       break

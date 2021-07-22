@@ -3,6 +3,7 @@ package registrar
 
 import (
   "jumpcloudexercise/services/repository"
+  "log"
   "sync"
   "time"
 )
@@ -37,14 +38,16 @@ func Get(id int) (repository.Record, error) {
 
 func Put(id int, hash string, hashtime time.Time) {
   activate()
-  repository.Put(id, hash, hashtime) // TODO: Should implement retry logic.
+  repository.Put(id, hash, hashtime)
   deactivate()
 }
 
 func Start() {
+  log.Printf("%s Package started", PackageName)
 }
 
 func Stop(unregister func(string)) {
+  log.Printf("Stop %s package", PackageName)
   for {
     if active == 0 {
       break

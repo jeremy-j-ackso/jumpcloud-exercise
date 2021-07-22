@@ -2,6 +2,7 @@
 package identifier
 
 import (
+  "log"
   "sync"
 )
 
@@ -51,10 +52,12 @@ func Current() int {
 
 // Registers as up with the Supervisor package.
 func Start() {
+  log.Printf("%s Package started", PackageName)
 }
 
 // Register as down with the Supervisor package when all work complete.
 func Stop(unregister func(string)) {
+  log.Printf("%s Package stopped", PackageName)
   for {
     if active == 0 {
       break

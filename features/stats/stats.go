@@ -2,6 +2,7 @@
 package stats
 
 import (
+  "log"
   "jumpcloudexercise/features/hash"
   "jumpcloudexercise/features/identifier"
   "sync"
@@ -37,6 +38,7 @@ func Get() (total int, average int64) {
 }
 
 func Start() {
+  log.Printf("%s Package started", PackageName)
 }
 
 func Stop(unregister func(string)) {
@@ -45,5 +47,6 @@ func Stop(unregister func(string)) {
       break
     }
   }
+  log.Printf("%s Package stopped", PackageName)
   unregister(PackageName)
 }

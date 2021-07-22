@@ -3,6 +3,7 @@ package app
 
 import (
   "encoding/json"
+  "fmt"
   "jumpcloudexercise/features/hash"
   "jumpcloudexercise/features/identifier"
   "jumpcloudexercise/features/registrar"
@@ -10,6 +11,7 @@ import (
   "jumpcloudexercise/services/httpserver"
   "jumpcloudexercise/services/repository"
   "jumpcloudexercise/services/supervisor"
+  "log"
   "net/http"
   "strconv"
   "strings"
@@ -37,7 +39,7 @@ var (
   }
 
   hashPath = endpointHandler{"/hash", hashHandler}
-  hashedPath = endpointHandler{"/hash/*", hashedHandler}
+  hashedPath = endpointHandler{"/hash/", hashedHandler}
   shutdownPath = endpointHandler{"/shutdown", shutdownHandler}
   statsPath = endpointHandler{"/stats", statsHandler}
 
@@ -50,52 +52,55 @@ var (
 )
 
 func hashHandler(w http.ResponseWriter, r *http.Request, ch chan int) {
+  log.Println("hashHandler called")
   switch r.Method {
   case "POST":
     password := r.FormValue("password")
     if password == "" { // TODO: Work with PM to define password requirements to match off of.
-      w.WriteHeader(400)
+      w.WriteHeader(http.StatusBadRequest)
     } else {
       id := identifier.Get()
-      w.Write([]byte(string(id)))
+      fmt.Fprintf(w, "%d\n", id)
       hashed := hash.Hash(password)
       now := time.Now()
       registrar.Put(id, hashed, now.Add(time.Second * 5))
     }
   default:
-    w.WriteHeader(405) // Method not allowed.
+    w.WriteHeader(http.StatusMethodNotAllowed)
   }
-  ch<- 1
+  ch <- 1
 }
 
 func hashedHandler(w http.ResponseWriter, r *http.Request, ch chan int) {
+  log.Println("hashedHandler called")
   switch r.Method {
   case "GET":
     path := r.URL.Path
     pathSplit := strings.Split(path, "/")
-
-    id, _ := strconv.Atoi(pathSplit[len(pathSplit)])
+    id, _ := strconv.Atoi(pathSplit[len(pathSplit) - 1])
     record, err := registrar.Get(id)
 
     if (err == nil) && record.Hashtime.Before(time.Now()) {
-      w.Write([]byte(record.Hash))
+      fmt.Fprintf(w, "%s\n", record.Hash)
     } else {
-      w.WriteHeader(404)
+      w.WriteHeader(http.StatusNotFound)
     }
   default:
-    w.WriteHeader(405) // Method not allowed.
+    w.WriteHeader(http.StatusMethodNotAllowed)
   }
   ch<- 1
 }
 
 func shutdownHandler (w http.ResponseWriter, r *http.Request, ch chan int) {
   // TODO: Better define which method should be used to issue a shutdown request.
-  w.WriteHeader(204)
+  log.Println("shutdownHandler called")
+  w.WriteHeader(http.StatusNoContent)
   Stop()
   ch<- 1
 }
 
 func statsHandler (w http.ResponseWriter, r *http.Request, ch chan int) {
+  log.Println("statsHandler called")
   switch r.Method {
   case "GET":
     response := make(map[string]int64)
@@ -110,16 +115,18 @@ func statsHandler (w http.ResponseWriter, r *http.Request, ch chan int) {
       w.Header().Set("Content-Type", "application/json")
       w.Write(jsonResponse)
     } else {
-      w.WriteHeader(500)
+      w.WriteHeader(http.StatusInternalServerError)
     }
   default:
-    w.WriteHeader(405)
+    w.WriteHeader(http.StatusMethodNotAllowed)
   }
   ch<- 1
 }
 
 func Start() {
+  log.Println("Registering packages")
   for pkg := range toRegisterWithSupervisor {
+    log.Printf("Registering %s package", toRegisterWithSupervisor[pkg].PackageName)
     supervisor.Register(
       toRegisterWithSupervisor[pkg].PackageName,
       toRegisterWithSupervisor[pkg].Start,
@@ -129,13 +136,16 @@ func Start() {
   supervisor.StartAll()
 
   for endpoint := range toRegisterWithHttp {
+    log.Printf("Registering endpoint %v", toRegisterWithHttp[endpoint])
     httpserver.Register(toRegisterWithHttp[endpoint].Path, toRegisterWithHttp[endpoint].Handler)
   }
 
+  log.Println("Starting http server")
   httpserver.Start("localhost", "8080")
 }
 
 func Stop() {
+  log.Println("Stopping http server")
   httpserver.Stop()
   supervisor.StopAll()
 }

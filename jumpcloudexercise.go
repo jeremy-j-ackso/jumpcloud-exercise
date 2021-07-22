@@ -1,12 +1,14 @@
 // Jumpcloud-Exercise implements an HTTP API for assigned routes and features.
-package jumpcloudexercise
+package main
 
 import (
-  "jumpcloudexercise/app"
+	"jumpcloudexercise/app"
+	"log"
 )
 
 func main() {
-  app.Start()
+	log.Println("App starting")
+	app.Start()
 }
 
 //TODO: Add a SIGTERM handler to stop the app.
